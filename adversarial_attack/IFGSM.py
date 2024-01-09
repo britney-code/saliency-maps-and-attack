@@ -5,8 +5,8 @@ import torchvision
 
 class ifgsm:
     def __init__(self,
-                 steps,
-                 eps,
+                 steps = 10,
+                 eps = 16 / 255,
                  device=torch.device("cuda:0" if torch.cuda.is_available() else "cpu"),
                  mean = [0.485, 0.456, 0.406],
                  std = [0.229, 0.224, 0.225]
@@ -17,7 +17,6 @@ class ifgsm:
         self.trans = Normalize(mean, std)
         self.alpha = self.eps / self.steps 
 
-  
 
     def attack(self, model, images, labels):
         images = images.clone().detach().to(self.device)
