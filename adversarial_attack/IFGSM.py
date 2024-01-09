@@ -22,11 +22,10 @@ class ifgsm:
         images = images.clone().detach().to(self.device)
         labels = labels.clone().detach().to(self.device)
         adv = images.clone().detach()
-
+        ce_loss = nn.CrossEntropyLoss()  # loss = F.nll_loss(logits, labels)
         for i in range(self.steps):
             adv.requires_grad = True
             logits = model(self.trans(adv))
-            ce_loss = nn.CrossEntropyLoss()  # loss = F.nll_loss(logits, labels)
             loss = ce_loss(logits, labels)
             loss.backward()
             adv = adv + self.alpha * torch.sign(adv.grad)
