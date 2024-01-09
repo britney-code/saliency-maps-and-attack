@@ -1,7 +1,6 @@
 import torch
 import torch.nn as nn
-from torchvision.transforms import Normalize
-
+from Normalize import Normalize 
 
 class mifgsm:
     def __init__(
@@ -17,17 +16,8 @@ class mifgsm:
         self.u = u  # u
         self.alpha = alpha
         self.device = device
+        self.trans = Normalize(mean= [0.5,0.5,0.5], std = [0.5,0.5,0.5])
 
-    def TNormalize(self, x, IsRe=False, mean=[0.5, 0.5, 0.5], std=[0.5, 0.5, 0.5]):
-        if not IsRe:
-            x = Normalize(mean=mean, std=std)(x)
-        elif IsRe:
-            # tensor.shape:(3,w.h)
-            for idx, i in enumerate(std):
-                x[:, idx, :, :] *= i
-            for index, j in enumerate(mean):
-                x[:, index, :, :] += j
-        return x
 
     def __call__(self, model, images, labels):
         images = images.clone().detach().to(self.device)
@@ -38,7 +28,7 @@ class mifgsm:
 
         for _ in range(self.steps):
             adv_images.requires_grad = True
-            outputs = model(self.TNormalize(adv_images))
+            outputs = model(self.trans(adv_images))
             cost = loss(outputs, labels)
             # Update adversarial images
             grad = torch.autograd.grad(cost, adv_images,
