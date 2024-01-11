@@ -18,7 +18,7 @@ class ifgsm:
         self.alpha = self.eps / self.steps 
 
 
-    def attack(self, model, images, labels):
+    def __call__(self, model, images, labels):
         images = images.clone().detach().to(self.device)
         labels = labels.clone().detach().to(self.device)
         adv = images.clone().detach()
