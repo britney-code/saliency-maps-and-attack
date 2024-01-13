@@ -83,6 +83,8 @@ class pifgsm:
             model.zero_grad()
             loss.backward()
             noise = images.grad.data
+            # TI
+            # noise = F.conv2d(noise, T_kernel, bias=None, stride=1, padding=(3, 3), groups=3)
             # MI
             noise = noise / torch.mean(torch.abs(noise), dim=[1, 2, 3], keepdim=True)
             noise = momentum * self.u + noise
