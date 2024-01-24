@@ -14,7 +14,7 @@ opt = argparse.ArgumentParser()
 opt.add_argument("--image_width", type=int, default=299, help="Width of each input images.")
 opt.add_argument("--image_height", type=int, default=299, help="Height of each input images.")
 opt.add_argument("--batch_size", type=int, default=20, help="How many images process at one time.")
-opt.add_argument('--adv_dir', type=str, default='./checkpoints/outputs/')
+opt.add_argument('--adv_dir', type=str, default='./checkpoints/adv_img/')
 opt.add_argument("--label_file", type=str, default='../dataset/imagenet val_1000/val_rs.csv')
 FLAGS = opt.parse_args()
 os.environ["CUDA_VISIBLE_DEVICES"] = '0'
@@ -159,8 +159,12 @@ def verify_ensmodels(model_name, path):
 
 def main():
     model_names = ['inception_v3', 'inception_v4', 'resnet_v2_50']
-    model_names_ens = ['tf2torch_ens3_adv_inc_v3',
-                       'tf2torch_ens4_adv_inc_v3']  # You can download the pretrained ens_models from https://github.com/ylhz/tf_to_pytorch_model
+    model_names_ens = [
+        'tf2torch_adv_inception_v3',
+        'tf2torch_ens3_adv_inc_v3',
+        'tf2torch_ens4_adv_inc_v3',
+        'tf2torch_ens_adv_inc_res_v2',
+   ]  # You can download the pretrained ens_models from https://github.com/ylhz/tf_to_pytorch_model
     models_path = './torch_nets_weight/'
     for model_name in model_names:
         verify(model_name, models_path)
