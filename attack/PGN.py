@@ -8,8 +8,8 @@ from torchvision.transforms import ToTensor, ToPILImage, transforms
 from tqdm import tqdm
 import numpy as np
 from PIL import Image
-from Normalize import Normalize
-from loader import ImageNet
+from evaluation.Normalize import Normalize
+from evaluation.loader import ImageNet
 from torch.utils.data import DataLoader
 import argparse
 import pretrainedmodels
@@ -38,13 +38,6 @@ transforms = T.Compose(
 )
 
 def clip_by_tensor(t, t_min, t_max):
-    """
-    clip_by_tensor
-    :param t: tensor
-    :param t_min: min
-    :param t_max: max
-    :return: cliped tensor
-    """
     result = (t >= t_min).float() * t + (t < t_min).float() * t_min
     result = (result <= t_max).float() * result + (result > t_max).float() * t_max
     return result

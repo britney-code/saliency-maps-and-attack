@@ -1,4 +1,3 @@
-
 import torch
 
 
@@ -32,7 +31,7 @@ if __name__ == '__main__':
     # MSE 揭露了对抗扰动的大小
     mse = MSE(original_images, adversarial_images)  # MSE # 下降
     pprint(mse)
-    # UQI是一种通用的图像质量衡量标准，可从多个角度提供更全面的评估。 # 不支持batchsize
+    # UQI是一种通用的图像质量衡量标准，可从多个角度提供更全面的评估。 # 不支持batchsize UQI 越大越好
     output = uqi(original_images.numpy().transpose(0, 2, 3, 1), adversarial_images.numpy().transpose(0, 2, 3, 1))
     pprint(output)
 

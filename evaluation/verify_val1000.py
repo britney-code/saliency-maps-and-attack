@@ -43,30 +43,30 @@ def get_model(net_name, model_dir):
         model = torch.nn.Sequential(Normalize([0.5, 0.5, 0.5], [0.5, 0.5, 0.5]),
                                     pretrainedmodels.inceptionresnetv2(num_classes=1000,
                                                                        pretrained='imagenet').eval().cuda())
-    elif net_name == 'tf2torch_adv_inception_v3':
-        from torch_nets import tf2torch_adv_inception_v3
-        net = tf2torch_adv_inception_v3
+    elif net_name == 'tf_adv_inception_v3':
+        from torch_nets import tf_adv_inception_v3
+        net = tf_adv_inception_v3
         model = nn.Sequential(
             # Images for inception classifier are normalized to be in [-1, 1] interval.
             TfNormalize('tensorflow'),
             net.KitModel(model_path).eval().cuda(), )
-    elif net_name == 'tf2torch_ens3_adv_inc_v3':
-        from torch_nets import tf2torch_ens3_adv_inc_v3
-        net = tf2torch_ens3_adv_inc_v3
+    elif net_name == 'tf_ens3_adv_inc_v3':
+        from torch_nets import tf_ens3_adv_inc_v3
+        net = tf_ens3_adv_inc_v3
         model = nn.Sequential(
             # Images for inception classifier are normalized to be in [-1, 1] interval.
             TfNormalize('tensorflow'),
             net.KitModel(model_path).eval().cuda(), )
-    elif net_name == 'tf2torch_ens4_adv_inc_v3':
-        from torch_nets import tf2torch_ens4_adv_inc_v3
-        net = tf2torch_ens4_adv_inc_v3
+    elif net_name == 'tf_ens4_adv_inc_v3':
+        from torch_nets import tf_ens4_adv_inc_v3
+        net = tf_ens4_adv_inc_v3
         model = nn.Sequential(
             # Images for inception classifier are normalized to be in [-1, 1] interval.
             TfNormalize('tensorflow'),
             net.KitModel(model_path).eval().cuda(), )
-    elif net_name == 'tf2torch_ens_adv_inc_res_v2':
-        from torch_nets import tf2torch_ens_adv_inc_res_v2
-        net = tf2torch_ens_adv_inc_res_v2
+    elif net_name == 'tf_ens_adv_inc_res_v2':
+        from torch_nets import tf_ens_adv_inc_res_v2
+        net = tf_ens_adv_inc_res_v2
         model = nn.Sequential(
             # Images for inception classifier are normalized to be in [-1, 1] interval.
             TfNormalize('tensorflow'),
@@ -160,10 +160,10 @@ def verify_ensmodels(model_name, path):
 def main():
     model_names = ['inception_v3', 'inception_v4', 'resnet_v2_50']
     model_names_ens = [
-        'tf2torch_adv_inception_v3',
-        'tf2torch_ens3_adv_inc_v3',
-        'tf2torch_ens4_adv_inc_v3',
-        'tf2torch_ens_adv_inc_res_v2',
+        'tf_adv_inception_v3',
+        'tf_ens3_adv_inc_v3',
+        'tf_ens4_adv_inc_v3',
+        'tf_ens_adv_inc_res_v2',
    ]  # You can download the pretrained ens_models from https://github.com/ylhz/tf_to_pytorch_model
     models_path = './torch_nets_weight/'
     for model_name in model_names:

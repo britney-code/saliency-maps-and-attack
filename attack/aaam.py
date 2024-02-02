@@ -3,21 +3,22 @@ import numpy as np
 import torch
 import torch.nn.functional as F
 import torch.nn as nn
-import torchattacks
 from torch import tensor
 import random
-from torchvision.transforms import Normalize
+from utils import Normalize
 
 __all__ = ['AAAM']
 
 
-class AAAM:
+class aaam:
     def __init__(
             self,
             eps: float = 16 / 255,
             eta: float = 7,
             alpha: float = 1.6 / 255,
-            device=torch.device("cuda" if torch.cuda.is_available() else "cpu")
+            device=torch.device("cuda" if torch.cuda.is_available() else "cpu"),
+            mean=[0.5, 0.5, 0.5],
+            std=[0.5, 0.5, 0.5],
     ):
         self.eps = eps
         self.alpha = alpha
@@ -25,6 +26,7 @@ class AAAM:
         self.eta = eta
         self.criterion = nn.MSELoss(reduction='mean')
         self.seed_torch(1024)
+        self.trans = Normalize(mean, std)
 
     def seed_torch(self, seed):
         """Set a random seed to ensure that the results are reproducible"""
@@ -37,17 +39,6 @@ class AAAM:
         torch.backends.cudnn.deterministic = True
         torch.backends.cudnn.benchmark = False
         torch.backends.cudnn.enabled = False
-
-    def TNormalize(self, x, IsRe=False, mean=[0.485, 0.456, 0.406], std=[0.229, 0.224, 0.225]):
-        if not IsRe:
-            x = Normalize(mean=mean, std=std)(x)
-        elif IsRe:
-            # tensor.shape:(3,w.h)
-            for idx, i in enumerate(std):
-                x[:, idx, :, :] *= i
-            for index, j in enumerate(mean):
-                x[:, index, :, :] += j
-        return x
 
     def LossCosine(self, model, images, frist, second) -> tensor:
         """
@@ -63,14 +54,14 @@ class AAAM:
         return L
 
     def Loss(self, model: nn.Module, x: tensor, y: tensor, frist, second) -> tensor:
-        pred = model(self.TNormalize(x))
+        pred = model(self.trans(x))
         loss = F.cross_entropy(pred, y)  # PGD loss
         gamma = 1000
         loss = self.LossCosine(model, x, frist, second) - gamma * loss
         return loss
 
     def calculate_cam(self, model, images, frist, second):
-        from saliency_maps.GradCAMplusplus import GradCamplusplus
+        from saliency_maps.gradients import GradCamplusplus
         cam = GradCamplusplus(model)
         cam1 = cam.get_gradient(images, "layer4", frist)[0]
         cam2 = cam.get_gradient(images, "layer4", second)[0]
