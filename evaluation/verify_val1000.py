@@ -2,7 +2,9 @@
 import glob
 import os
 import numpy as np
+import pandas as pd
 import torch
+from PIL import Image
 from imageio.v2 import imread
 from torch import nn
 from tqdm import tqdm
@@ -77,81 +79,69 @@ def get_model(net_name, model_dir):
     return model
 
 
-def load_images(input_dir, batch_shape):
-    f2l = load_labels(FLAGS.label_file)
-    """Read png images from input directory in batches.
-    Args:
-      input_dir: input directory
-      batch_shape: shape of minibatch array, i.e. [batch_size, height, width, 3]
-    Yields:
-      filenames: list file names without path of each image
-        Lenght of this list could be less than batch_size, in this case only
-        first few images of the result are elements of the minibatch.
-      images: array with all images from this batch
-    """
-    images = np.zeros(batch_shape)
+def load_images(input_dir, batch_size):
+    images = []
     filenames = []
     idx = 0
-    labels = []
-    batch_size = batch_shape[0]
-    # for filepath in tf.gfile.Glob(os.path.join(input_dir, '*')):
-    for filepath in glob.glob(os.path.join(input_dir, '*')):
-        # with tf.gfile.Open(filepath, 'rb') as f:
-        with open(filepath, 'rb') as f:
-            image = imread(f, pilmode='RGB').astype(float) / 255.0
+    for filepath in os.listdir(input_dir):
+        image = Image.open(os.path.join(input_dir, filepath))
+        image = image.resize((FLAGS.image_width, FLAGS.image_height)).convert('RGB')
         # Images for inception classifier are normalized to be in [-1, 1] interval.
-        # images[idx, :, :, :] = image * 2.0 - 1.0
-        images[idx, :, :, :] = image
+        images.append(np.array(image).astype(np.float32) / 255)
         filenames.append(os.path.basename(filepath))
         idx += 1
-        labels.append(f2l[os.path.basename(filepath)])
-        imgs = torch.from_numpy(images.transpose(0, 3, 1, 2)).to(torch.float32)
-        labs = torch.from_numpy(np.array(labels)).to(torch.long)
         if idx == batch_size:
-            yield filenames, imgs, labs
+            images = torch.from_numpy(np.array(images)).permute(0, 3, 1, 2)
+            yield filenames, images
             filenames = []
-            images = np.zeros(batch_shape)
-            labels = []
+            images = []
             idx = 0
     if idx > 0:
-        yield filenames, imgs, labs
+        images = torch.from_numpy(np.array(images)).permute(0, 3, 1, 2)
+        yield filenames, images
+
+
+def get_labels(names, f2l):
+    labels = []
+    for name in names:
+        labels.append(f2l[name] - 1)
+    return torch.from_numpy(np.array(labels, dtype=np.int64))
 
 
 def load_labels(file_name):
-    import pandas as pd
     dev = pd.read_csv(file_name)
-    f2l = {dev.iloc[i]['filename']: dev.iloc[i]['label'] - 1 for i in range(len(dev))}
+    f2l = {dev.iloc[i]['filename']: dev.iloc[i]['label'] for i in range(len(dev))}
     return f2l
 
 
 def verify(model_name, path):
     img_size = 299
     total_batches = len(glob.glob(os.path.join(FLAGS.adv_dir, '*'))) // FLAGS.batch_size
+    f2l = load_labels(os.path.join(FLAGS.label_file))
     model = get_model(model_name, path)
     sum = 0
-    for filenames, images, labels in tqdm(
-            load_images(FLAGS.adv_dir, [FLAGS.batch_size, FLAGS.image_height, FLAGS.image_width, 3]),
-            desc="evaluate attack ...", total=total_batches
+    for batch_idx, [filenames, images] in tqdm.tqdm(
+            enumerate(load_images(os.path.join(FLAGS.input_dir), FLAGS.batch_size)),
+            desc=f"Load images... attack {FLAGS.attack_name} ...", total=total_batches
     ):
         images = images.cuda()
-        labels = labels.cuda()
+        labels = get_labels(filenames, f2l).cuda()
         with torch.no_grad():
             sum += (model(images).argmax(1) != (labels)).detach().sum().cpu()
     print("Attack Success Rate for {0} : {1:.1f}%".format(model_name, sum / 1000. * 100))
 
 
 def verify_ensmodels(model_name, path):
-    img_size = 299
     total_batches = len(glob.glob(os.path.join(FLAGS.adv_dir, '*'))) // FLAGS.batch_size
+    f2l = load_labels(os.path.join(FLAGS.label_file))
     model = get_model(model_name, path)
     sum = 0
-    for filenames, images, labels in tqdm(
-            load_images(FLAGS.adv_dir, [FLAGS.batch_size, FLAGS.image_height, FLAGS.image_width, 3]),
-            desc="evaluate attack ...", total=total_batches
+    for batch_idx, [filenames, images] in tqdm.tqdm(
+            enumerate(load_images(os.path.join(FLAGS.input_dir), FLAGS.batch_size)),
+            desc=f"Load images... attack {FLAGS.attack_name} ...", total=total_batches
     ):
         images = images.cuda()
-        labels = labels.cuda()
-        print(images, labels)
+        labels = get_labels(filenames, f2l).cuda()
         with torch.no_grad():
             sum += (model(images).argmax(1) != (labels + 1)).detach().sum().cpu()
     print("Attack Success Rate for {0} : {1:.1f}%".format(model_name, sum / 1000. * 100))

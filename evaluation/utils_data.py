@@ -76,3 +76,18 @@ class SelectedImagenet(Dataset):
         return image, int(target)
     def __len__(self):
         return len(self.selected_list)
+
+
+def save_images(output_dir, adversaries, filenames):
+    adversaries = (adversaries.detach().permute((0, 2, 3, 1)).cpu().numpy() * 255).astype(np.uint8)
+    for i, filename in enumerate(filenames):
+        Image.fromarray(adversaries[i]).save(os.path.join(output_dir, filename))
+
+
+def clamp(x, x_min, x_max):
+    return torch.min(torch.max(x, x_min), x_max)
+
+
+def save_img(output_path, img):
+    img = (img.detach().permute((0, 2, 3, 1)).cpu().numpy() * 255).astype(np.uint8)
+    Image.fromarray(img).save(output_path)
