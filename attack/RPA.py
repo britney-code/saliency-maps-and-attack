@@ -132,7 +132,7 @@ class RPA:
                         mask2 = np.random.uniform(0, 1, size=shape)
                         mask = np.where(mask1 == 1, 1, mask2)
                     elif l % 4 == 1:
-                        mask = self.patch_by_strides(shape, patch_size=(5, 5), prob=self.prob)
+                        mask = self.patch_by_strides(shape, patch_size=(3, 3), prob=self.prob)
                     elif l % 4 == 2:
                         mask = self.patch_by_strides(shape, patch_size=(5, 5), prob=self.prob)
                     else:
