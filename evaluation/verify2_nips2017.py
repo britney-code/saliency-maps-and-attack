@@ -7,11 +7,13 @@ from Normalize import Normalize, TfNormalize
 from loader import ImageNet
 from torch.utils.data import DataLoader
 import pretrainedmodels
+from torchvision.transforms import Resize
+
+
 batch_size = 10
 input_csv = './dataset/images.csv'
 input_dir = './dataset/images'
-adv_dir = './checkpoint/adv_img'
-
+adv_dir = './experiment/RPA_resnet152_1'
 os.environ["CUDA_VISIBLE_DEVICES"] = '0'
 
 
@@ -27,10 +29,10 @@ def get_model(net_name, model_dir):
                                     pretrainedmodels.inceptionv4(num_classes=1000, pretrained='imagenet').eval().cuda())
     elif net_name == 'resnet_v2_50':
         model = torch.nn.Sequential(Normalize([0.485, 0.456, 0.406], [0.229, 0.224, 0.225]),
-                                    pretrainedmodels.resnet50(num_classes=1000, pretrained='imagenet').eval().cuda())
+                                   pretrainedmodels.resnet50(num_classes=1000, pretrained='imagenet').eval().cuda())
     elif net_name == 'resnet_v2_101':
         model = torch.nn.Sequential(Normalize([0.485, 0.456, 0.406], [0.229, 0.224, 0.225]),
-                                    pretrainedmodels.resnet101(num_classes=1000, pretrained='imagenet').eval().cuda())
+                                   pretrainedmodels.resnet101(num_classes=1000, pretrained='imagenet').eval().cuda())
     elif net_name == 'resnet_v2_152':
         model = torch.nn.Sequential(Normalize([0.485, 0.456, 0.406], [0.229, 0.224, 0.225]),
                                     pretrainedmodels.resnet152(num_classes=1000, pretrained='imagenet').eval().cuda())
@@ -38,6 +40,15 @@ def get_model(net_name, model_dir):
         model = torch.nn.Sequential(Normalize([0.5, 0.5, 0.5], [0.5, 0.5, 0.5]),
                                     pretrainedmodels.inceptionresnetv2(num_classes=1000,
                                                                        pretrained='imagenet').eval().cuda())
+    elif net_name == 'vgg-16':
+        model = torch.nn.Sequential(Resize([224, 224]),
+                                    Normalize([0.485, 0.456, 0.406], [0.229, 0.224, 0.225]),
+                                    pretrainedmodels.vgg16(num_classes=1000, pretrained='imagenet').eval().cuda())
+    elif net_name == 'vgg-19':
+        model = torch.nn.Sequential(Resize([224, 224]),
+                                    Normalize([0.485, 0.456, 0.406], [0.229, 0.224, 0.225]),
+                                    pretrainedmodels.vgg19(num_classes=1000, pretrained='imagenet').eval().cuda())
+
     elif net_name == 'tf_adv_inception_v3':
         from torch_nets import tf_adv_inception_v3
         net = tf_adv_inception_v3
@@ -97,14 +108,13 @@ def verify_ensmodels(model_name, path):
         images = images.cuda()
         with torch.no_grad():
             # print(sum)
-            sum += (model(images)[0].argmax(1) != (gt + 1)).detach().sum().cpu()
+            sum += (model(images).argmax(1) != (gt + 1)).detach().sum().cpu()
     print(model_name + '  acu = {:.2%}'.format(sum / 1000.0))
 
 
 def main():
-    model_names = ['inception_v3', 'inception_v4', 'resnet_v2_50', 'resnet_v2_101', 'resnet_v2_152', 'inc_res_v2']
-    model_names_ens = ['tf_ens3_adv_inc_v3', 'tf_ens4_adv_inc_v3', 'tf_ens_adv_inc_res_v2',
-                       'tf_adv_inception_v3']
+    model_names = ['inception_v3','inception_v4','inc_res_v2','resnet_v2_50', 'resnet_v2_152','vgg-16', 'vgg-19'] 
+    model_names_ens = ['tf_adv_inception_v3', 'tf_ens_adv_inc_res_v2', 'tf_ens3_adv_inc_v3', 'tf_ens4_adv_inc_v3']
     models_path = './torch_nets_weight/'
     for model_name in model_names:
         verify(model_name, models_path)
