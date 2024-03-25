@@ -34,23 +34,20 @@ import os
 APP_ID = ''
 API_KEY = ''
 SECRET_KEY = ''
-
 client = AipImageClassify(APP_ID, API_KEY, SECRET_KEY)
-
-
 # 读取图片文件
 def get_file_content(file_path):
     with open(file_path, 'rb') as fp:
         return fp.read()
 
-
 attacksuccess = 0  # 攻击成功的图像
 num = 1000
 correct_label = []
 # 图像文件夹路径
-image_folder_path = './dataset/images'
+image_folder_path = './dataset/images/'
 # 获取图像文件列表
 image_files = [f for f in os.listdir(image_folder_path) if f.endswith('.png')]
+print(image_files)
 
 j = 0
 # 循环处理每张图像
@@ -67,10 +64,22 @@ for image_file in image_files:
     j += 1
     if j == 1000: break
 
-# 对抗样本图像的文件夹
-adv_folder_path = r"C:\Users\wanqiang\Desktop\defense\TAIG_R_ens"
-adv_image_files = [f for f in os.listdir(adv_folder_path) if f.endswith('.png')]
 
+with open("correct_label.txt", "w") as file:
+    for label in correct_label:
+         file.write(label + "\n")
+
+
+# 从txt文件加载为列表
+loaded_correct_label = []
+with open("correct_label.txt", "r") as file:
+    for line in file:
+        loaded_correct_label.append(line.strip())
+
+# 对抗样本图像的文件夹
+adv_folder_path = r"C:\Users\wanqiang\Desktop\STM_ens"
+adv_image_files = [f for f in os.listdir(adv_folder_path) if f.endswith('.png')]
+print(adv_image_files)
 i = 0
 for adv in adv_image_files:
     adv_path = os.path.join(adv_folder_path, adv)
