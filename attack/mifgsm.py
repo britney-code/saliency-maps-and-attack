@@ -1,6 +1,7 @@
 import torch
 import torch.nn as nn
-from Normalize import Normalize 
+from Normalize import Normalize
+
 
 class mifgsm:
     def __init__(
@@ -9,15 +10,16 @@ class mifgsm:
             eps=16 / 255,
             alpha=1.6 / 255,
             steps=10,
-            u=1.0
+            u=1.0,
+            mean=[0.5, 0.5, 0.5],
+            std=[0.5, 0.5, 0.5]
     ):
         self.eps = eps
         self.steps = steps
         self.u = u  # u
         self.alpha = alpha
         self.device = device
-        self.trans = Normalize(mean= [0.5,0.5,0.5], std = [0.5,0.5,0.5])
-
+        self.trans = Normalize(mean=mean, std=std)
 
     def __call__(self, model, images, labels):
         images = images.clone().detach().to(self.device)
