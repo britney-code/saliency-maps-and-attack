@@ -76,7 +76,7 @@ def VisualizeImageDiverging(image_3d, percentile=99):
     return np.clip((image_2d - vmin) / (vmax - vmin), -1, 1)
 
 
-def ShowGrayscaleImage(image_3d, title='', ax=None):
+def ShowGrayscaleImage(image_3d, title='', ax=None, cmap = "bwr"):
     """
     example:
      >>> from saliency_maps import ShowGrayscaleImage
@@ -89,9 +89,10 @@ def ShowGrayscaleImage(image_3d, title='', ax=None):
     if ax is None:
         P.figure()
     P.axis('off')
-    P.imshow(im, cmap=P.cm.gray, vmin=0, vmax=1)
-    P.title(title)
+    P.imshow(im, cmap=cmap, vmin=0, vmax=1)
+    plt.savefig(title, dpi = 900)
     P.show()
+    
 
 
 def ShowColorscaleImage(
